@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MineralBoard v2 — Precios Minerales USD/kg | MPPDEMIB</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080c14;--bg2:#0f1520;--card:#141c2c;--cardH:#1a2540;--brd:#1c2a44;--t1:#e2e8f0;--t2:#7a8ba0;--t3:#4a5568;--blue:#3b82f6;--cyan:#06b6d4;--grn:#10b981;--grnB:rgba(16,185,129,.07);--red:#ef4444;--redB:rgba(239,68,68,.07);--gold:#f59e0b;--chart:#0b1018;--grid:rgba(30,45,74,.3);--bull:#10b981;--bullB:#059669;--bear:#ef4444;--bearB:#dc2626;--tog:#1e2d4a;--knob:#3b82f6;--noise:.3;--accent:#6366f1;--accentB:rgba(99,102,241,.08)}
+[data-theme=light]{--bg:#f0f2f5;--bg2:#fff;--card:#f8f9fb;--cardH:#eef1f6;--brd:#d1d9e6;--t1:#1a202c;--t2:#5a6677;--t3:#8896ab;--blue:#2563eb;--cyan:#0891b2;--grn:#059669;--grnB:rgba(5,150,105,.07);--red:#dc2626;--redB:rgba(220,38,38,.07);--gold:#d97706;--chart:#fff;--grid:rgba(0,0,0,.05);--bull:#059669;--bullB:#047857;--bear:#dc2626;--bearB:#b91c1c;--tog:#d1d9e6;--knob:#2563eb;--noise:0;--accent:#4f46e5;--accentB:rgba(79,70,229,.06)}
+*{margin:0;padding:0;box-sizing:border-box}::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--t3);border-radius:3px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;transition:background .4s,color .4s}
+body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:var(--noise)}
+.M{font-family:'JetBrains Mono',monospace}
+
+/* HEADER */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--brd);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-weight:700;font-size:18px;background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:2px}
+.hR{display:flex;align-items:center;gap:10px}
+.thm{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}.trk{width:40px;height:20px;background:var(--tog);border-radius:10px;position:relative;border:1px solid var(--brd)}.knb{width:14px;height:14px;background:var(--knob);border-radius:50%;position:absolute;top:2px;left:2px;transition:transform .3s cubic-bezier(.4,0,.2,1)}[data-theme=light] .knb{transform:translateX(20px);background:var(--gold)}
+.sts{display:flex;align-items:center;gap:5px;font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid}.sts.ok{color:var(--grn);background:var(--grnB);border-color:rgba(16,185,129,.15)}.sts.sim{color:var(--gold);background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.15)}.sts.err{color:var(--red);background:var(--redB);border-color:rgba(239,68,68,.15)}
+.dot{width:6px;height:6px;border-radius:50%;animation:p 1.5s ease infinite}.sts.ok .dot{background:var(--grn)}.sts.sim .dot{background:var(--gold)}.sts.err .dot{background:var(--red)}@keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
+.clk{font-size:11px;color:var(--t2)}.cnt{font-size:9px;color:var(--t3);background:var(--card);padding:3px 7px;border-radius:3px;border:1px solid var(--brd)}
+
+/* TOOLBAR */
+.tb{padding:6px 20px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--brd);background:var(--bg2);flex-wrap:wrap}
+.btn{font-size:10px;padding:4px 10px;border-radius:4px;border:1px solid var(--brd);background:0;color:var(--t2);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}.btn:hover{border-color:var(--blue);color:var(--t1)}.btn.a{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-update{background:linear-gradient(135deg,var(--cyan),var(--blue));border:none;color:#fff;padding:5px 14px;font-weight:600;gap:4px;display:flex;align-items:center;font-size:10px;border-radius:4px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}.btn-update:hover{opacity:.85;transform:scale(1.02)}.btn-update:active{transform:scale(.98)}.btn-update.loading{opacity:.6;pointer-events:none}
+.btn-update .spinner{width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;display:none}.btn-update.loading .spinner{display:inline-block}.btn-update.loading .btn-icon{display:none}
+.sep{width:1px;height:18px;background:var(--brd)}
+
+/* TAB BAR */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--brd);background:var(--bg2)}
+.tab{padding:8px 16px;font-size:11px;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;font-weight:500}.tab:hover{color:var(--t1);background:var(--cardH)}.tab.a{color:var(--blue);border-bottom-color:var(--blue);background:var(--card)}
+
+/* MINERAL STRIP */
+.sbar{display:flex;gap:0;padding:0;overflow-x:auto;border-bottom:1px solid var(--brd);background:var(--bg2)}
+.si{padding:8px 14px;border-right:1px solid var(--brd);min-width:120px;cursor:pointer;flex-shrink:0;transition:background .2s}.si:hover{background:var(--cardH)}.si.a{background:var(--card);border-bottom:2px solid var(--blue)}
+.sn{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px}.sp{font-size:14px;font-weight:600}.sc{font-size:10px}.up{color:var(--grn)}.dn{color:var(--red)}
+
+/* MAIN LAYOUT */
+.ml{display:grid;grid-template-columns:1fr 340px;height:calc(100vh - 200px)}
+
+/* CHART AREA */
+.ca{padding:14px 18px;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.ch{display:flex;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px}.ci{width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}.cn{font-size:20px;font-weight:700}.cu{font-size:10px;color:var(--t3)}.cp{font-size:26px;font-weight:700;text-align:right}.cc{font-size:12px;text-align:right}
+.ccs{display:flex;gap:3px;margin-bottom:8px;align-items:center;flex-wrap:wrap}.ccb{font-size:9px;padding:3px 9px;border-radius:3px;border:1px solid var(--brd);background:0;color:var(--t2);cursor:pointer;font-family:'JetBrains Mono',monospace}.ccb.a{background:var(--blue);border-color:var(--blue);color:#fff}
+.badge{font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid;margin-left:auto}.badge.ok{color:var(--grn);border-color:rgba(16,185,129,.3)}.badge.sim{color:var(--gold);border-color:rgba(245,158,11,.3)}
+.ccon{flex:1;background:var(--chart);border:1px solid var(--brd);border-radius:6px;overflow:hidden;min-height:250px;transition:background .4s}canvas{display:block}
+
+/* SIDEBAR TABLE */
+.side{border-left:1px solid var(--brd);background:var(--bg2);display:flex;flex-direction:column;overflow:hidden}
+.sh{padding:10px 14px;border-bottom:1px solid var(--brd);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);display:flex;justify-content:space-between;align-items:center}.scnt{background:var(--blue);color:#fff;padding:1px 5px;border-radius:3px;font-size:9px}
+.tw{flex:1;overflow-y:auto}
+table{width:100%;border-collapse:collapse}th{position:sticky;top:0;background:var(--card);font-size:8px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);padding:7px 8px;text-align:left;border-bottom:1px solid var(--brd);z-index:1}th:nth-child(n+2){text-align:right}
+td{padding:7px 8px;border-bottom:1px solid rgba(30,45,74,.2);font-size:10px;transition:background .3s}td:nth-child(n+2){text-align:right}tr{cursor:pointer;transition:background .15s}tr:hover{background:var(--cardH)}tr.a{background:var(--card)}
+.mc{display:flex;align-items:center;gap:6px}.md{width:7px;height:7px;border-radius:2px}.ms{font-weight:600}.mf{font-size:8px;color:var(--t3);display:block;margin-top:1px}
+.pf{animation:fl .6s ease}@keyframes fl{0%{background:rgba(59,130,246,.12)}100%{background:transparent}}
+.cb{display:inline-block;padding:1px 4px;border-radius:2px;font-size:9px;font-weight:500}.cb.up{background:var(--grnB);color:var(--grn)}.cb.dn{background:var(--redB);color:var(--red)}
+
+/* BOTTOM STATS */
+.bs{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--brd);background:var(--bg2)}.sb{padding:8px 14px;border-right:1px solid var(--brd);text-align:center}.sl{font-size:8px;text-transform:uppercase;letter-spacing:1px;color:var(--t3)}.sv{font-size:13px;font-weight:600}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  .ml{grid-template-columns:1fr;height:auto}
+  .ca{min-height:380px}
+  .side{border-left:none;border-top:1px solid var(--brd);max-height:320px}
+  .ccon{min-height:220px}
+}
+@media(max-width:640px){
+  .hdr{padding:8px 12px;flex-wrap:wrap;gap:6px}
+  .logo{font-size:15px}.sub{font-size:7px;letter-spacing:1px}
+  .hR{gap:5px;flex-wrap:wrap;justify-content:flex-end}
+  .clk{font-size:9px}.cnt{font-size:8px;padding:2px 5px}.last-update{font-size:8px;padding:2px 5px}
+  .sts{font-size:8px;padding:2px 6px}.thm span.M{display:none}
+  .tb{padding:5px 10px;gap:4px}.btn{font-size:9px;padding:3px 7px}.btn-update{font-size:9px;padding:4px 10px}.sep{height:14px}
+  .tab{padding:6px 10px;font-size:10px}
+  .sbar{-webkit-overflow-scrolling:touch}.si{padding:6px 10px;min-width:95px}.sn{font-size:9px}.sp{font-size:12px}.sc{font-size:9px}
+  .ca{padding:10px 12px;min-height:320px}.cn{font-size:16px}.cp{font-size:20px}.cc{font-size:10px}.cu{font-size:8px}.ci{width:28px;height:28px;font-size:11px}.ccon{min-height:180px}
+  .side{max-height:260px}td{padding:5px 6px;font-size:9px}th{padding:5px 6px;font-size:7px}
+  .bs{grid-template-columns:repeat(3,1fr)}.sb{padding:6px 8px}.sl{font-size:7px}.sv{font-size:11px}
+  .hist-panel{height:auto;max-height:calc(100vh - 160px)}.hist-header{padding:10px 12px;flex-wrap:wrap;gap:8px}.hist-title{font-size:12px}.hist-grid{padding:10px 12px}
+  .hist-table td,.hist-table th{padding:5px 6px;font-size:8px}#histMineral{font-size:9px;padding:3px 6px}
+}
+@media(max-width:380px){
+  .logo{font-size:13px}.sub{display:none}.hR{gap:4px}.clk,.cnt,.last-update{font-size:7px}
+  .cn{font-size:14px}.cp{font-size:16px}.bs{grid-template-columns:repeat(2,1fr)}
+}
+
+/* HISTORY PANEL */
+.hist-panel{display:none;flex-direction:column;height:calc(100vh - 200px);overflow:hidden}
+.hist-panel.active{display:flex}
+.ml.hidden{display:none}
+.hist-grid{flex:1;overflow-y:auto;padding:16px 20px}
+.hist-header{padding:14px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;background:var(--bg2)}
+.hist-title{font-size:14px;font-weight:600}
+.hist-subtitle{font-size:10px;color:var(--t3)}
+.hist-table{width:100%;border-collapse:collapse;font-size:11px}
+.hist-table thead{position:sticky;top:0;z-index:2}
+.hist-table th{background:var(--card);padding:8px 10px;text-align:right;font-size:8px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);border-bottom:1px solid var(--brd)}
+.hist-table th:first-child{text-align:left}
+.hist-table td{padding:7px 10px;text-align:right;border-bottom:1px solid rgba(30,45,74,.15);font-size:10px}
+.hist-table td:first-child{text-align:left;font-weight:500;color:var(--t2)}
+.hist-table tr:hover{background:var(--cardH)}
+.hist-table .today{background:var(--accentB);font-weight:600}
+.hist-empty{text-align:center;padding:60px 20px;color:var(--t3)}
+.hist-empty .icon{font-size:40px;margin-bottom:12px}
+
+/* LOADING */
+.lo{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}.lo.h{opacity:0;pointer-events:none}.lsp{width:40px;height:40px;border:3px solid var(--brd);border-top-color:var(--blue);border-radius:50%;animation:sp .8s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}.lt{font-size:12px;color:var(--t2);margin-top:14px}
+
+/* LAST UPDATE BADGE */
+.last-update{font-size:9px;color:var(--t3);background:var(--card);padding:3px 8px;border-radius:3px;border:1px solid var(--brd)}
+</style>
+</head>
+<body data-theme="dark">
+<div class="lo" id="lo"><div class="lsp"></div><div class="lt M" id="ltx">Conectando...</div></div>
+
+<div class="hdr">
+  <div><div class="logo M">⬡ MINERALBOARD</div><div class="sub M">MPPDEMIB — Panel de Precios Minerales en Tiempo Real</div></div>
+  <div class="hR">
+    <div class="thm" id="thm"><span id="ti">🌙</span><div class="trk"><div class="knb"></div></div><span class="M" style="font-size:9px;color:var(--t2)" id="tl">Oscuro</span></div>
+    <div class="sts sim M" id="sts"><div class="dot"></div><span id="stx">CONECTANDO</span></div>
+    <div class="clk M" id="clk">--:--:--</div>
+    <div class="last-update M" id="lastUpd">Última act: --</div>
+    <div class="cnt M" id="cnt">Ticks: 0</div>
+  </div>
+</div>
+
+<div class="tb M">
+  <button class="btn-update" id="btnUpdate" onclick="manualUpdate()">
+    <span class="btn-icon">🔄</span>
+    <span class="spinner"></span>
+    Actualizar
+  </button>
+  <div class="sep"></div>
+  <button class="btn a" data-f="all">Todos (10)</button>
+  <button class="btn" data-f="precious">Preciosos</button>
+  <button class="btn" data-f="base">Base</button>
+  <div class="sep"></div>
+  <button class="btn a" id="tct">📊 Velas</button>
+  <button class="btn" id="tln">📈 Línea</button>
+</div>
+
+<!-- TABS: Panel de Control / Historial -->
+<div class="tabs M">
+  <div class="tab a" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Panel de Control</div>
+  <div class="tab" data-tab="history" onclick="switchTab('history')">📅 Historial de Días</div>
+</div>
+
+<!-- MINERAL STRIP -->
+<div class="sbar" id="sbar"></div>
+
+<!-- DASHBOARD VIEW -->
+<div class="ml" id="mainLayout">
+  <div class="ca">
+    <div class="ch">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="ci M" id="cic">Au</div>
+        <div><div class="cn" id="cnm">Oro</div><div class="cu M" id="cun">USD/kg — COMEX</div></div>
+      </div>
+      <div><div class="cp M" id="cpx">—</div><div class="cc M" id="ccx">—</div></div>
+    </div>
+    <div class="ccs M">
+      <div class="badge sim M" id="bdg">⏳ Conectando...</div>
+    </div>
+    <div class="ccon"><canvas id="mc"></canvas></div>
+  </div>
+  <div class="side">
+    <div class="sh M"><span>Metales — USD/kg</span><span class="scnt" id="mcnt">10</span></div>
+    <div class="tw"><table class="M"><thead><tr><th>Mineral</th><th>USD/kg</th><th>% Var</th><th>Bolsa</th></tr></thead><tbody id="tb"></tbody></table></div>
+  </div>
+</div>
+
+<!-- HISTORY VIEW -->
+<div class="hist-panel" id="histPanel">
+  <div class="hist-header">
+    <div>
+      <div class="hist-title">📅 Historial de Precios</div>
+      <div class="hist-subtitle M" id="histSubtitle">Cargando datos históricos...</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <select id="histMineral" class="M" style="font-size:10px;padding:4px 8px;border-radius:4px;border:1px solid var(--brd);background:var(--card);color:var(--t1);cursor:pointer">
+        <option value="all">Todos los minerales</option>
+      </select>
+    </div>
+  </div>
+  <div class="hist-grid">
+    <div class="hist-empty" id="histEmpty">
+      <div class="icon">📭</div>
+      <div style="font-size:13px;margin-bottom:6px">Sin datos históricos</div>
+      <div style="font-size:10px">Los datos se cargarán desde la base de datos</div>
+    </div>
+    <table class="hist-table M" id="histTable" style="display:none">
+      <thead id="histThead"></thead>
+      <tbody id="histTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="bs M">
+  <div class="sb"><div class="sl">Máx Día</div><div class="sv" id="sH">—</div></div>
+  <div class="sb"><div class="sl">Mín Día</div><div class="sv" id="sL">—</div></div>
+  <div class="sb"><div class="sl">% Var Diaria</div><div class="sv" id="sV">—</div></div>
+  <div class="sb"><div class="sl">Precio Anterior</div><div class="sv" id="sP">—</div></div>
+  <div class="sb"><div class="sl">Fuente</div><div class="sv" id="sS" style="font-size:9px">—</div></div>
+</div>
+
+<script>
+// ================================================================
+// ⚡ CONFIGURACIÓN — PEGAR AQUÍ TUS URLs DE GOOGLE SHEETS CSV
+// ================================================================
+// Hoja "Datos" — precios actuales
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQjMsFwwlYFVo-618fjoUcF7k8klPIEdLW5wZcwy5R-Mcr3YRqWoGeKO66sVVW8uGVE3DjbkyG5pxy/pub?gid=1978501024&single=true&output=csv';
+
+// Hoja "Historial" — datos diarios
+const HISTORY_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQjMsFwwlYFVo-618fjoUcF7k8klPIEdLW5wZcwy5R-Mcr3YRqWoGeKO66sVVW8uGVE3DjbkyG5pxy/pub?gid=810961100&single=true&output=csv';
+
+const SHEET_INTERVAL = 30000;
+
+// ================================================================
+// FORMATO NUMÉRICO VENEZOLANO: 147.456,29
+// Miles separados por . y decimales por ,
+// ================================================================
+function fmtES(v, decimals) {
+  if (v == null || isNaN(v)) return '—';
+  const d = decimals != null ? decimals : (v >= 10000 ? 2 : v >= 1 ? 4 : 6);
+  const parts = Math.abs(v).toFixed(d).split('.');
+  // Add thousands separator with .
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return (v < 0 ? '-' : '') + parts[0] + ',' + parts[1];
+}
+
+// Price formatting — always Venezuelan style
+function fp(v) {
+  if (v == null || isNaN(v)) return '—';
+  return fmtES(v, 2);
+}
+
+// Change formatting
+function fc(v) {
+  if (v == null || isNaN(v)) return '—';
+  const sign = v >= 0 ? '+' : '';
+  return sign + fmtES(v, 2);
+}
+
+// Percent formatting
+function fpct(v) {
+  if (v == null || isNaN(v)) return '—';
+  return (v >= 0 ? '+' : '') + fmtES(v, 2) + '%';
+}
+
+// ================================================================
+// 10 MINERALES
+// ================================================================
+const DB = [
+  {id:'gold',sym:'Au',name:'Oro',cat:'precious',color:'#FFD700',ex:'COMEX',rawU:'USD/troy oz',fac:32.1507,raw:4586.41,rawMx:4868.25,rawMn:4505.31,rawV:-309.79,pct:-6.33},
+  {id:'silver',sym:'Ag',name:'Plata',cat:'precious',color:'#C0C0C0',ex:'COMEX',rawU:'USD/troy oz',fac:32.1507,raw:69.66,rawMx:76.755,rawMn:65.638,rawV:-7.932,pct:-10.22},
+  {id:'plat',sym:'Pt',name:'Platino',cat:'precious',color:'#E5E4E2',ex:'NYMEX',rawU:'USD/troy oz',fac:32.1507,raw:1928.15,rawMx:2050.50,rawMn:1858.70,rawV:-128.45,pct:-6.25},
+  {id:'pall',sym:'Pd',name:'Paladio',cat:'precious',color:'#CED0CE',ex:'NYMEX',rawU:'USD/troy oz',fac:32.1507,raw:1448.00,rawMx:1519.00,rawMn:1412.50,rawV:-88.60,pct:-5.77},
+  {id:'copper',sym:'Cu',name:'Cobre',cat:'base',color:'#B87333',ex:'COMEX',rawU:'USD/lb',fac:2.20462,raw:5.4558,rawMx:5.5535,rawMn:5.2985,rawV:-0.1382,pct:-2.47},
+  {id:'alum',sym:'Al',name:'Aluminio',cat:'base',color:'#A8A9AD',ex:'LME',rawU:'USD/mt',fac:0.001,raw:3251.15,rawMx:3358.50,rawMn:3130.83,rawV:-164.03,pct:-4.80},
+  {id:'nickel',sym:'Ni',name:'Níquel',cat:'base',color:'#727472',ex:'LME',rawU:'USD/mt',fac:0.001,raw:16921.00,rawMx:17049.25,rawMn:16350.50,rawV:-233.13,pct:-1.36},
+  {id:'zinc',sym:'Zn',name:'Zinc',cat:'base',color:'#7D7D7D',ex:'LME',rawU:'USD/mt',fac:0.001,raw:3080.75,rawMx:3139.05,rawMn:3030.65,rawV:-60.70,pct:-1.93},
+  {id:'tin',sym:'Sn',name:'Estaño',cat:'base',color:'#D3D4D5',ex:'LME',rawU:'USD/mt',fac:0.001,raw:46625.00,rawMx:46625.00,rawMn:46625.00,rawV:-1644.00,pct:-3.41},
+  {id:'lead',sym:'Pb',name:'Plomo',cat:'base',color:'#5C5C5C',ex:'LME',rawU:'USD/mt',fac:0.001,raw:1887.65,rawMx:1917.75,rawMn:1875.55,rawV:-29.08,pct:-1.52},
+];
+
+// ================================================================
+// STATE
+// ================================================================
+let M=[], sel=null, cType='candle', ticks=0, filter='all', src='sim';
+let sheetsOK=false, lastSheetData=null, historyData=[], lastUpdateTime=null;
+let hoverX=-1, hoverY=-1, hoverActive=false;
+
+// ================================================================
+// INIT
+// ================================================================
+async function init(){
+  M = DB.map(d => {
+    const p=d.raw*d.fac, mx=d.rawMx*d.fac, mn=d.rawMn*d.fac, v=d.rawV*d.fac;
+    return {...d, price:p, prev:p, base:p, high:mx, low:mn, open:p-v, pct:d.pct};
+  });
+  sel = M[0];
+  // Chart data built from history after fetch
+
+  // Populate history mineral selector
+  const sel2 = document.getElementById('histMineral');
+  M.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = m.sym + ' — ' + m.name;
+    sel2.appendChild(opt);
+  });
+  sel2.onchange = renderHistory;
+
+  document.getElementById('ltx').textContent = 'Cargando datos...';
+  await fetchSheet();
+  await fetchHistory();
+
+  buildChartArrays();
+  updClock(); updInfo(); render(); renderSum(); renderTbl(); updStatus();
+  setTimeout(() => document.getElementById('lo').classList.add('h'), 700);
+
+  setInterval(mainTick, 1000);
+  setInterval(fetchSheet, SHEET_INTERVAL);
+  setInterval(fetchHistory, 120000); // history every 2 min
+}
+
+// ================================================================
+// TAB SWITCHING
+// ================================================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('a'));
+  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('a');
+
+  if (tab === 'dashboard') {
+    document.getElementById('mainLayout').classList.remove('hidden');
+    document.getElementById('histPanel').classList.remove('active');
+  } else {
+    document.getElementById('mainLayout').classList.add('hidden');
+    document.getElementById('histPanel').classList.add('active');
+    renderHistory();
+  }
+}
+
+// ================================================================
+// MANUAL UPDATE BUTTON
+// ================================================================
+async function manualUpdate() {
+  const btn = document.getElementById('btnUpdate');
+  btn.classList.add('loading');
+  try {
+    await fetchSheet();
+    await fetchHistory();
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+
+// ================================================================
+// SMART FETCH — intenta directo, si CORS falla usa proxy
+// ================================================================
+const CORS_PROXIES = [
+  url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+  url => 'https://corsproxy.io/?' + encodeURIComponent(url),
+];
+
+async function smartFetch(url) {
+  // Intento 1: directo (funciona en GitHub Pages / servidor)
+  try {
+    const r = await fetch(url + '&_t=' + Date.now(), {cache:'no-cache'});
+    if(r.ok) { const t = await r.text(); if(t.length > 10) return t; }
+  } catch(e) {
+    console.log('⚠️ Fetch directo falló (CORS), intentando proxy...');
+  }
+  // Intento 2-3: proxies CORS (para abrir como file://)
+  for(const proxy of CORS_PROXIES) {
+    try {
+      const r = await fetch(proxy(url), {cache:'no-cache'});
+      if(r.ok) { const t = await r.text(); if(t.length > 10) { console.log('✅ Proxy CORS funcionó'); return t; } }
+    } catch(e) { continue; }
+  }
+  throw new Error('No se pudo conectar a Google Sheets');
+}
+
+// ================================================================
+// GOOGLE SHEETS CSV FETCH — CURRENT PRICES
+// ================================================================
+async function fetchSheet(){
+  try{
+    const t = await smartFetch(SHEET_URL);
+    const parsed = parseCSV(t);
+    if(parsed && Object.keys(parsed).length >= 3){
+      lastSheetData = parsed;
+      sheetsOK = true;
+      src = 'sheets';
+      lastUpdateTime = new Date();
+      M.forEach(m => {
+        const names = [m.name, m.name.normalize('NFD').replace(/[\u0300-\u036f]/g,''), m.sym];
+        for(const n of names){
+          if(parsed[n] && parsed[n] > 0){
+            m.base = parsed[n];
+            if(Math.abs(m.price-m.base)/m.base > 0.05) m.price = m.base;
+            break;
+          }
+        }
+      });
+      document.getElementById('lastUpd').textContent = 'Última act: ' + lastUpdateTime.toLocaleDateString('es-VE',{day:'2-digit',month:'short'});
+      console.log('✅ Datos:', Object.keys(parsed).length, 'minerales', parsed);
+    }
+  } catch(e) {
+    console.warn('Sheets fetch:', e);
+    if(!sheetsOK) src = 'sim';
+  }
+  updStatus();
+}
+
+// ================================================================
+// GOOGLE SHEETS CSV FETCH — HISTORY
+// ================================================================
+async function fetchHistory(){
+  try {
+    const t = await smartFetch(HISTORY_URL);
+    const parsed = parseHistoryCSV(t);
+    if(parsed && parsed.length > 0){
+      historyData = parsed;
+      console.log('✅ Historial:', parsed.length, 'registros');
+      buildChartArrays();
+      renderHistory();
+      render();
+    }
+  } catch(e) {
+    console.warn('History fetch:', e);
+  }
+}
+
+function parseHistoryCSV(text){
+  const lines = text.split('\n').map(l=>l.trim()).filter(l=>l);
+  if(lines.length < 2) return [];
+  
+  const hdr = splitCSVLine(lines[0]).map(h=>h.replace(/"/g,'').trim());
+  
+  // Detect column positions
+  const colFecha = hdr.findIndex(h=>h.toLowerCase().includes('fecha') || h.toLowerCase().includes('date'));
+  if(colFecha === -1) return [];
+  
+  // Map mineral columns
+  const mineralCols = {};
+  const mineralNames = ['Oro','Plata','Platino','Paladio','Cobre','Aluminio','Níquel','Niquel','Zinc','Estaño','Plomo'];
+  
+  hdr.forEach((h, idx) => {
+    if(idx === colFecha) return;
+    const clean = h.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    for(const mn of mineralNames){
+      const mnClean = mn.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      if(clean.toLowerCase().includes(mnClean.toLowerCase())){
+        mineralCols[mn === 'Níquel' ? 'Niquel' : mn] = idx;
+        break;
+      }
+    }
+  });
+  
+  const rows = [];
+  for(let i=1; i<lines.length; i++){
+    const cols = splitCSVLine(lines[i]);
+    if(cols.length < 2) continue;
+    
+    const fecha = (cols[colFecha]||'').replace(/"/g,'').trim();
+    if(!fecha) continue;
+    
+    const row = { fecha };
+    for(const [mineral, colIdx] of Object.entries(mineralCols)){
+      const val = parseNum(cols[colIdx]);
+      if(!isNaN(val) && val > 0) row[mineral] = val;
+    }
+    
+    if(Object.keys(row).length > 1) rows.push(row);
+  }
+  
+  return rows.reverse(); // most recent first
+}
+
+// ================================================================
+// RENDER HISTORY TABLE
+// ================================================================
+function renderHistory(){
+  const filter = document.getElementById('histMineral').value;
+  const empty = document.getElementById('histEmpty');
+  const table = document.getElementById('histTable');
+  const thead = document.getElementById('histThead');
+  const tbody = document.getElementById('histTbody');
+  const subtitle = document.getElementById('histSubtitle');
+  
+  if(!historyData || historyData.length === 0){
+    empty.style.display = 'block';
+    table.style.display = 'none';
+    subtitle.textContent = 'Sin datos históricos disponibles';
+    return;
+  }
+  
+  empty.style.display = 'none';
+  table.style.display = 'table';
+  
+  // Determine which minerals to show
+  const allMinerals = ['Oro','Plata','Platino','Paladio','Cobre','Aluminio','Niquel','Zinc','Estaño','Plomo'];
+  let minerals;
+  
+  if(filter === 'all'){
+    minerals = allMinerals.filter(m => historyData.some(r => r[m]));
+  } else {
+    const found = M.find(m=>m.id===filter);
+    if(found){
+      const name = found.name === 'Níquel' ? 'Niquel' : found.name;
+      minerals = [name];
+    } else {
+      minerals = allMinerals;
+    }
+  }
+  
+  subtitle.textContent = historyData.length + ' registros históricos — ' + minerals.length + ' minerales';
+  
+  // Build header
+  let hdrHTML = '<tr><th style="text-align:left">Fecha</th>';
+  minerals.forEach(m => {
+    const sym = DB.find(d => d.name === m || d.name === 'Níquel' && m === 'Niquel');
+    hdrHTML += `<th>${sym ? sym.sym : m}<br><span style="font-size:7px;opacity:.6">USD/kg</span></th>`;
+  });
+  hdrHTML += '</tr>';
+  thead.innerHTML = hdrHTML;
+  
+  // Build rows
+  const today = new Date().toISOString().slice(0,10);
+  let bodyHTML = '';
+  
+  historyData.forEach(row => {
+    const isToday = row.fecha && row.fecha.includes(today);
+    bodyHTML += `<tr class="${isToday ? 'today' : ''}">`;
+    bodyHTML += `<td style="white-space:nowrap">${row.fecha}</td>`;
+    
+    minerals.forEach(m => {
+      const val = row[m];
+      if(val != null && !isNaN(val)){
+        bodyHTML += `<td>${fp(val)}</td>`;
+      } else {
+        bodyHTML += `<td style="color:var(--t3)">—</td>`;
+      }
+    });
+    bodyHTML += '</tr>';
+  });
+  
+  tbody.innerHTML = bodyHTML;
+}
+
+// ================================================================
+// CSV PARSING (shared)
+// ================================================================
+function parseNum(s){
+  if(typeof s==='number') return s; if(!s) return NaN;
+  s=s.trim().replace(/"/g,'').replace(/[()]/g,'');
+  if(s.includes(',')&&s.includes('.')){
+    const lc=s.lastIndexOf(','), ld=s.lastIndexOf('.');
+    if(ld>lc) s=s.replace(/,/g,'');
+    else s=s.replace(/\./g,'').replace(',','.');
+  } else if(s.includes(',')){
+    const parts=s.split(',');
+    if(parts.length===2&&parts[1].length<=2) s=s.replace(',','.');
+    else s=s.replace(/,/g,'');
+  }
+  return parseFloat(s);
+}
+
+function splitCSVLine(line){
+  const result=[]; let current='', inQuotes=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"') inQuotes=!inQuotes;
+    else if(ch===','&&!inQuotes){ result.push(current.trim()); current=''; }
+    else current+=ch;
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function parseCSV(text){
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+  if(lines.length<4) return null;
+  let hdrIdx=-1;
+  for(let i=0;i<Math.min(lines.length,5);i++){
+    const low=lines[i].toLowerCase();
+    if(low.includes('mineral')&&(low.includes('usd')||low.includes('mbol')||low.includes('ultimo')||low.includes('ltimo'))){
+      hdrIdx=i; break;
+    }
+  }
+  if(hdrIdx===-1) return parseCSV_legacy(text);
+  const hdr=splitCSVLine(lines[hdrIdx]).map(h=>h.replace(/"/g,'').trim().toLowerCase());
+  const colMineral=hdr.findIndex(h=>h.includes('mineral'));
+  const colSym=hdr.findIndex(h=>h.includes('mbol')||h.includes('sym'));
+  let colUsdKg=hdr.findIndex(h=>h==='usd/kg'||h==='usd_kg');
+  if(colUsdKg===-1) colUsdKg=hdr.findIndex(h=>h.includes('usd/kg')||h.includes('usd_kg'));
+  if(colUsdKg===-1) colUsdKg=hdr.findIndex(h=>h.includes('usd')&&!h.includes('max')&&!h.includes('min')&&!h.includes('var')&&!h.includes('original'));
+  if(colUsdKg===-1) colUsdKg=5;
+  const colRaw=hdr.findIndex(h=>h.includes('ltimo')||h.includes('ultimo')||h.includes('raw'));
+  const colFactor=hdr.findIndex(h=>h.includes('factor'));
+  const prices={};
+  for(let i=hdrIdx+1;i<lines.length;i++){
+    const cols=splitCSVLine(lines[i]);
+    if(cols.length<3) continue;
+    const name=(cols[colMineral>=0?colMineral:0]||'').replace(/"/g,'').trim();
+    if(!name||name.toLowerCase().includes('resumen')||name.toLowerCase().includes('total')||name.includes('MINERAL')) continue;
+    let usdkg=parseNum(cols[colUsdKg]);
+    if((isNaN(usdkg)||usdkg<=0)&&colRaw>=0&&colFactor>=0){
+      const raw=parseNum(cols[colRaw]); const fac=parseNum(cols[colFactor]);
+      if(!isNaN(raw)&&!isNaN(fac)&&raw>0&&fac>0) usdkg=raw*fac;
+    }
+    if(!isNaN(usdkg)&&usdkg>0){
+      prices[name]=usdkg;
+      const norm=name.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      if(norm!==name) prices[norm]=usdkg;
+      if(colSym>=0){
+        const sym=(cols[colSym]||'').replace(/"/g,'').trim();
+        if(sym) prices[sym]=usdkg;
+      }
+    }
+  }
+  return Object.keys(prices).length>0?prices:null;
+}
+
+function parseCSV_legacy(text){
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+  if(lines.length<2) return null;
+  const hdr=lines[0].split(',').map(h=>h.replace(/"/g,'').trim());
+  let best=null, bestYear=0;
+  for(let i=lines.length-1;i>=1;i--){
+    const cols=lines[i].split(',').map(c=>c.replace(/"/g,'').trim());
+    const yr=parseInt(cols[0]);
+    if(!isNaN(yr)&&yr>1900&&yr>bestYear){bestYear=yr;best=cols;break}
+  }
+  if(!best) return null;
+  const prices={};
+  const nameMap={'oro':'Oro','plata':'Plata','cobre':'Cobre','aluminio':'Aluminio','niquel':'Niquel','zinc':'Zinc','estano':'Estaño','plomo':'Plomo','platino':'Platino','paladio':'Paladio'};
+  for(let j=1;j<hdr.length;j++){
+    const h=hdr[j].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    for(const[k,v]of Object.entries(nameMap)){if(h.includes(k)){if(j<best.length){const val=parseNum(best[j]);if(!isNaN(val)&&val>0)prices[v]=val;}break}}
+  }
+  return prices;
+}
+
+// ================================================================
+// STATUS UI
+// ================================================================
+function updStatus(){
+  const el=document.getElementById('sts'), tx=document.getElementById('stx'),
+        bg=document.getElementById('bdg'), ss=document.getElementById('sS');
+  el.className='sts M';
+  if(src==='sheets'){
+    el.classList.add('ok'); tx.textContent='CONECTADO';
+    bg.className='badge ok M'; bg.textContent='🟢 Datos Reales';
+    ss.textContent='Conectado'; ss.style.color='var(--grn)';
+  } else {
+    el.classList.add('sim'); tx.textContent='SIMULADO';
+    bg.className='badge sim M'; bg.textContent='🟡 Simulado';
+    ss.textContent='Datos Simulados'; ss.style.color='var(--gold)';
+  }
+}
+
+// ================================================================
+// CHART DATA FROM HISTORY (Google Sheets real data)
+// ================================================================
+// Map mineral name to id for chart lookup
+const nameToId={'Oro':'gold','Plata':'silver','Platino':'plat','Paladio':'pall','Cobre':'copper','Aluminio':'alum','Niquel':'nickel','Níquel':'nickel','Zinc':'zinc','Estaño':'tin','Plomo':'lead'};
+const idToName={'gold':'Oro','silver':'Plata','plat':'Platino','pall':'Paladio','copper':'Cobre','alum':'Aluminio','nickel':'Niquel','zinc':'Zinc','tin':'Estaño','lead':'Plomo'};
+
+function getChartData(mineralId){
+  const name=idToName[mineralId];
+  if(!name||!historyData||historyData.length===0) return [];
+  // historyData is newest-first from parseHistoryCSV, we need oldest-first for chart
+  const sorted=[...historyData].reverse();
+  const pts=[];
+  sorted.forEach(row=>{
+    const v=row[name];
+    if(v&&v>0) pts.push({fecha:row.fecha, v:v});
+  });
+  return pts;
+}
+
+function buildChartArrays(){
+  M.forEach(m=>{
+    const pts=getChartData(m.id);
+    if(pts.length>0){
+      // Update price from latest history point
+      m.price=pts[pts.length-1].v;
+      m.prev=pts.length>1?pts[pts.length-2].v:m.price;
+      m.pct=m.prev>0?((m.price-m.prev)/m.prev)*100:0;
+      m.high=Math.max(...pts.map(p=>p.v));
+      m.low=Math.min(...pts.map(p=>p.v));
+    }
+  });
+}
+
+// ================================================================
+// CHART — renders real data from Google Sheets history
+// ================================================================
+function render(){
+  const cv=document.getElementById('mc'),ct=cv.parentElement,dpr=devicePixelRatio||1,rc=ct.getBoundingClientRect();
+  if(rc.width<10||rc.height<10)return;
+  cv.width=rc.width*dpr;cv.height=rc.height*dpr;cv.style.width=rc.width+'px';cv.style.height=rc.height+'px';
+  const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);const W=rc.width,H=rc.height;
+  const cs=getComputedStyle(document.body),C={g:cs.getPropertyValue('--grid').trim(),m:cs.getPropertyValue('--t3').trim(),bu:cs.getPropertyValue('--bull').trim(),bb:cs.getPropertyValue('--bullB').trim(),be:cs.getPropertyValue('--bear').trim(),beb:cs.getPropertyValue('--bearB').trim(),bl:cs.getPropertyValue('--blue').trim(),gn:cs.getPropertyValue('--grn').trim(),rd:cs.getPropertyValue('--red').trim(),bg:cs.getPropertyValue('--chart').trim()};
+  ctx.fillStyle=C.bg;ctx.fillRect(0,0,W,H);if(!sel)return;
+  const pts=getChartData(sel.id);
+  if(pts.length<2){ctx.fillStyle=C.m;ctx.font='12px DM Sans';ctx.textAlign='center';ctx.fillText('Sin datos históricos suficientes',W/2,H/2);return;}
+  cType==='candle'?drawCandles(ctx,W,H,pts,C):drawLine(ctx,W,H,pts,C);
+}
+function drawCandles(x,W,H,pts,C){
+  const p={t:16,r:80,b:28,l:8},cw=W-p.l-p.r,ch=H-p.t-p.b;
+  // Build candle data: each day = one candle, open=prev close, close=today price
+  const candles=pts.map((pt,i)=>{
+    const prev=i>0?pts[i-1].v:pt.v;
+    const o=prev,cl=pt.v;
+    const spread=Math.abs(cl-o)*0.3||pt.v*0.002;
+    const h=Math.max(o,cl)+spread*Math.random();
+    const l=Math.min(o,cl)-spread*Math.random();
+    return {fecha:pt.fecha,o,h,l,c:cl};
+  });
+  let mn=1/0,mx=-1/0;candles.forEach(c=>{mn=Math.min(mn,c.l);mx=Math.max(mx,c.h)});
+  const rng=mx-mn||1;mn-=rng*.06;mx+=rng*.06;const tot=mx-mn;
+  const yS=v=>p.t+ch-((v-mn)/tot)*ch,gap=cw/candles.length,bw=Math.max(2,Math.min(gap*.65,20));
+  // Grid + Y labels
+  x.strokeStyle=C.g;x.lineWidth=.5;for(let i=0;i<=5;i++){const y=p.t+(ch/5)*i;x.beginPath();x.moveTo(p.l,y);x.lineTo(W-p.r,y);x.stroke();x.fillStyle=C.m;x.font='8px JetBrains Mono';x.textAlign='left';x.fillText(fp(mx-(tot/5)*i),W-p.r+4,y+3)}
+  // Candles
+  candles.forEach((c,i)=>{const cx=p.l+i*gap+gap/2,bl=c.c>=c.o,tp=yS(Math.max(c.o,c.c)),bt=yS(Math.min(c.o,c.c)),bH=Math.max(1,bt-tp);x.strokeStyle=bl?C.bu:C.be;x.lineWidth=1;x.beginPath();x.moveTo(cx,yS(c.h));x.lineTo(cx,yS(c.l));x.stroke();x.fillStyle=bl?C.bu:C.be;x.globalAlpha=.85;x.fillRect(cx-bw/2,tp,bw,bH);x.globalAlpha=1;x.strokeStyle=bl?C.bb:C.beb;x.lineWidth=.5;x.strokeRect(cx-bw/2,tp,bw,bH)});
+  // Last price line
+  const lc=candles[candles.length-1].c,yL=yS(lc);x.setLineDash([3,2]);x.strokeStyle=C.bl+'88';x.lineWidth=1;x.beginPath();x.moveTo(p.l,yL);x.lineTo(W-p.r,yL);x.stroke();x.setLineDash([]);
+  x.fillStyle=C.bl;x.fillRect(W-p.r,yL-7,74,14);x.fillStyle='#fff';x.font='bold 8px JetBrains Mono';x.textAlign='left';x.fillText(fp(lc),W-p.r+3,yL+3);
+  // X labels — real dates from Sheets
+  x.fillStyle=C.m;x.font='7px JetBrains Mono';x.textAlign='center';
+  const st=Math.max(1,Math.floor(candles.length/7));
+  for(let i=0;i<candles.length;i+=st){
+    const f=candles[i].fecha||'';
+    const parts=f.split('-');
+    const label=parts.length>=3?parts[2]+'/'+parts[1]:f.slice(-5);
+    x.fillText(label,p.l+i*gap+gap/2,H-8);
+  }
+  // Crosshair
+  if(hoverActive&&hoverX>=p.l&&hoverX<=W-p.r&&hoverY>=p.t&&hoverY<=p.t+ch){
+    x.strokeStyle=C.m+'66';x.lineWidth=.5;x.setLineDash([3,3]);
+    x.beginPath();x.moveTo(hoverX,p.t);x.lineTo(hoverX,p.t+ch);x.stroke();
+    x.beginPath();x.moveTo(p.l,hoverY);x.lineTo(W-p.r,hoverY);x.stroke();x.setLineDash([]);
+    const priceAtY=mn+((p.t+ch-hoverY)/ch)*tot;
+    x.fillStyle=C.bl;x.fillRect(W-p.r,hoverY-7,74,14);
+    x.fillStyle='#fff';x.font='bold 8px JetBrains Mono';x.textAlign='left';x.fillText(fp(priceAtY),W-p.r+3,hoverY+3);
+    const ci=Math.floor((hoverX-p.l)/gap);
+    if(ci>=0&&ci<candles.length){
+      const tag=fp(candles[ci].c);const tw2=tag.length*5.5+12;const tx=Math.min(hoverX+10,W-p.r-tw2);
+      x.fillStyle=C.bg;x.globalAlpha=.9;x.fillRect(tx,hoverY-22,tw2,16);x.globalAlpha=1;
+      x.strokeStyle=C.bl+'55';x.lineWidth=.5;x.strokeRect(tx,hoverY-22,tw2,16);
+      x.fillStyle='#fff';x.font='bold 9px JetBrains Mono';x.textAlign='left';x.fillText(tag,tx+6,hoverY-11);
+    }
+  }
+}
+
+function drawLine(x,W,H,pts,C){
+  const p={t:16,r:80,b:28,l:8},cw=W-p.l-p.r,ch=H-p.t-p.b;
+  let mn=1/0,mx=-1/0;pts.forEach(pt=>{mn=Math.min(mn,pt.v);mx=Math.max(mx,pt.v)});
+  const rng=mx-mn||1;mn-=rng*.06;mx+=rng*.06;const tot=mx-mn;
+  const xS=i=>p.l+(i/(pts.length-1))*cw, yS=v=>p.t+ch-((v-mn)/tot)*ch;
+  // Grid
+  x.strokeStyle=C.g;x.lineWidth=.5;for(let i=0;i<=5;i++){const y=p.t+(ch/5)*i;x.beginPath();x.moveTo(p.l,y);x.lineTo(W-p.r,y);x.stroke();x.fillStyle=C.m;x.font='8px JetBrains Mono';x.textAlign='left';x.fillText(fp(mx-(tot/5)*i),W-p.r+4,y+3)}
+  // Area + Line
+  const up=pts[pts.length-1].v>=pts[0].v, lc=up?C.gn:C.rd;
+  const gr=x.createLinearGradient(0,p.t,0,p.t+ch);gr.addColorStop(0,lc+'22');gr.addColorStop(1,lc+'00');
+  x.beginPath();x.moveTo(xS(0),yS(pts[0].v));pts.forEach((pt,i)=>x.lineTo(xS(i),yS(pt.v)));x.lineTo(xS(pts.length-1),p.t+ch);x.lineTo(xS(0),p.t+ch);x.closePath();x.fillStyle=gr;x.fill();
+  x.beginPath();x.moveTo(xS(0),yS(pts[0].v));pts.forEach((pt,i)=>x.lineTo(xS(i),yS(pt.v)));x.strokeStyle=lc+'44';x.lineWidth=4;x.stroke();
+  x.beginPath();x.moveTo(xS(0),yS(pts[0].v));pts.forEach((pt,i)=>x.lineTo(xS(i),yS(pt.v)));x.strokeStyle=lc;x.lineWidth=1.5;x.stroke();
+  // Last price
+  const lv=pts[pts.length-1].v,yL=yS(lv);x.setLineDash([3,2]);x.strokeStyle=C.bl+'88';x.lineWidth=1;x.beginPath();x.moveTo(p.l,yL);x.lineTo(W-p.r,yL);x.stroke();x.setLineDash([]);
+  x.fillStyle=C.bl;x.fillRect(W-p.r,yL-7,74,14);x.fillStyle='#fff';x.font='bold 8px JetBrains Mono';x.textAlign='left';x.fillText(fp(lv),W-p.r+3,yL+3);
+  x.beginPath();x.arc(xS(pts.length-1),yL,3,0,Math.PI*2);x.fillStyle=lc;x.fill();
+  // X labels — real dates
+  x.fillStyle=C.m;x.font='7px JetBrains Mono';x.textAlign='center';
+  const st=Math.max(1,Math.floor(pts.length/7));
+  for(let i=0;i<pts.length;i+=st){
+    const f=pts[i].fecha||'';const parts=f.split('-');
+    const label=parts.length>=3?parts[2]+'/'+parts[1]:f.slice(-5);
+    x.fillText(label,xS(i),H-8);
+  }
+  // Crosshair
+  if(hoverActive&&hoverX>=p.l&&hoverX<=W-p.r&&hoverY>=p.t&&hoverY<=p.t+ch){
+    x.strokeStyle=C.m+'66';x.lineWidth=.5;x.setLineDash([3,3]);
+    x.beginPath();x.moveTo(hoverX,p.t);x.lineTo(hoverX,p.t+ch);x.stroke();
+    x.beginPath();x.moveTo(p.l,hoverY);x.lineTo(W-p.r,hoverY);x.stroke();x.setLineDash([]);
+    const priceAtY=mn+((p.t+ch-hoverY)/ch)*tot;
+    x.fillStyle=C.bl;x.fillRect(W-p.r,hoverY-7,74,14);
+    x.fillStyle='#fff';x.font='bold 8px JetBrains Mono';x.textAlign='left';x.fillText(fp(priceAtY),W-p.r+3,hoverY+3);
+    const ci=Math.round(((hoverX-p.l)/cw)*(pts.length-1));
+    if(ci>=0&&ci<pts.length){
+      const pv=pts[ci].v,py=yS(pv);
+      x.beginPath();x.arc(hoverX,py,4,0,Math.PI*2);x.fillStyle=lc;x.fill();
+      x.beginPath();x.arc(hoverX,py,2,0,Math.PI*2);x.fillStyle='#fff';x.fill();
+      const tag=fp(pv);const tw2=tag.length*5.5+12;const tx=Math.min(hoverX+10,W-p.r-tw2);
+      x.fillStyle=C.bg;x.globalAlpha=.9;x.fillRect(tx,py-22,tw2,16);x.globalAlpha=1;
+      x.strokeStyle=C.bl+'55';x.lineWidth=.5;x.strokeRect(tx,py-22,tw2,16);
+      x.fillStyle='#fff';x.font='bold 9px JetBrains Mono';x.textAlign='left';x.fillText(tag,tx+6,py-11);
+    }
+  }
+}
+
+// ================================================================
+// RENDERS
+// ================================================================
+function gf(){return filter==='all'?M:M.filter(m=>m.cat===filter)}
+
+window.selM = id => { sel=M.find(m=>m.id===id); updInfo(); render(); renderSum(); renderTbl(); };
+
+function updClock(){
+  const n=new Date();
+  document.getElementById('clk').textContent=n.toLocaleDateString('es-VE',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function mainTick(){
+  ticks++;
+  document.getElementById('cnt').textContent='Ticks: '+ticks.toLocaleString('es-VE');
+  updClock(); updInfo(); renderSum(); renderTbl();
+}
+
+function renderSum(){
+  document.getElementById('sbar').innerHTML=gf().map(m=>{
+    const d=m.pct>=0?'up':'dn', a=m.id===sel.id?'a':'';
+    return`<div class="si ${a}" onclick="selM('${m.id}')"><div class="sn M">${m.sym} ${m.name}</div><div class="sp M">${fp(m.price)}</div><div class="sc M ${d}">${fpct(m.pct)}</div></div>`;
+  }).join('');
+}
+
+function renderTbl(){
+  const list=gf();
+  document.getElementById('mcnt').textContent=list.length;
+  document.getElementById('tb').innerHTML=list.map(m=>{
+    const d=m.pct>=0?'up':'dn', a=m.id===sel.id?'a':'', fl=Math.abs(m.price-m.prev)>m.base*.0001?'pf':'';
+    return`<tr class="${a}" onclick="selM('${m.id}')"><td><div class="mc"><div class="md" style="background:${m.color}"></div><div><span class="ms">${m.sym}</span><span class="mf">${m.name}</span></div></div></td><td class="${fl}">${fp(m.price)}</td><td><span class="cb ${d}">${fpct(m.pct)}</span></td><td style="font-size:8px;color:var(--t3)">${m.ex}</td></tr>`;
+  }).join('');
+}
+
+function updInfo(){
+  if(!sel) return;
+  const m=sel;
+  document.getElementById('cic').textContent=m.sym;
+  document.getElementById('cic').style.cssText=`background:${m.color}18;color:${m.color};border:1px solid ${m.color}33;width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace`;
+  document.getElementById('cnm').textContent=m.name;
+  document.getElementById('cun').textContent=`USD/kg — ${m.ex} | ${m.rawU} × ${fmtES(m.fac,2)}`;
+  document.getElementById('cpx').textContent=fp(m.price);
+  document.getElementById('cpx').style.color=m.pct>=0?'var(--grn)':'var(--red)';
+  const ce=document.getElementById('ccx');
+  ce.textContent=fpct(m.pct);
+  ce.style.color=m.pct>=0?'var(--grn)':'var(--red)';
+  document.getElementById('sH').textContent=fp(m.high);
+  document.getElementById('sL').textContent=fp(m.low);
+  const sv=document.getElementById('sV');sv.textContent=fpct(m.pct);sv.style.color=m.pct>=0?'var(--grn)':'var(--red)';
+  const sp=document.getElementById('sP');sp.textContent=fp(m.prev);sp.style.color='var(--t1)';
+}
+
+// ================================================================
+// EVENTS
+// ================================================================
+document.getElementById('thm').onclick=()=>{
+  const b=document.body,c=b.getAttribute('data-theme'),n=c==='dark'?'light':'dark';
+  b.setAttribute('data-theme',n);
+  document.getElementById('ti').textContent=n==='dark'?'🌙':'☀️';
+  document.getElementById('tl').textContent=n==='dark'?'Oscuro':'Claro';
+  setTimeout(render,50);
+  try{localStorage.setItem('mb-t',n)}catch(e){}
+};
+try{if(localStorage.getItem('mb-t')==='light'){document.body.setAttribute('data-theme','light');document.getElementById('ti').textContent='☀️';document.getElementById('tl').textContent='Claro'}}catch(e){}
+
+document.querySelectorAll('.btn[data-f]').forEach(b=>b.onclick=function(){
+  document.querySelectorAll('.btn[data-f]').forEach(x=>x.classList.remove('a'));
+  this.classList.add('a'); filter=this.dataset.f; renderSum(); renderTbl();
+});
+
+document.getElementById('tct').onclick=()=>{cType='candle';document.getElementById('tct').classList.add('a');document.getElementById('tln').classList.remove('a');render()};
+document.getElementById('tln').onclick=()=>{cType='line';document.getElementById('tln').classList.add('a');document.getElementById('tct').classList.remove('a');render()};
+window.onresize=render;
+
+// Crosshair hover events
+const mcv=document.getElementById('mc');
+mcv.addEventListener('mousemove',e=>{
+  const r=mcv.getBoundingClientRect();
+  hoverX=e.clientX-r.left;hoverY=e.clientY-r.top;hoverActive=true;render();
+});
+mcv.addEventListener('mouseleave',()=>{hoverActive=false;render()});
+mcv.addEventListener('touchmove',e=>{
+  e.preventDefault();const t=e.touches[0],r=mcv.getBoundingClientRect();
+  hoverX=t.clientX-r.left;hoverY=t.clientY-r.top;hoverActive=true;render();
+},{passive:false});
+mcv.addEventListener('touchend',()=>{hoverActive=false;render()});
+mcv.style.cursor='crosshair';
+
+init();
+</script>
+</body>
+</html>
